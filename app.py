@@ -6,6 +6,7 @@ import hmac
 import hashlib
 import random
 
+# Environment Variables
 TOKEN = os.getenv("8050976089:AAGaHpknsUTBL2jeuB5lq4laJhdN7-q-1tk")
 ADMIN_ID = int(os.getenv("6658513478"))
 RAZOR_SECRET = os.getenv("singbotx_official")
@@ -14,7 +15,7 @@ bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
 DB_FILE = "database.json"
-user_plan = {}  # temporary storage for UID input
+user_plan = {}  # Temporary storage for UID input
 
 # ---------------------------
 # Database functions
@@ -52,14 +53,53 @@ def telegram_webhook():
     bot.process_new_updates([update])
     return "OK", 200
 
-# Start command
+# ---------------------------
+# Main Menu
+# ---------------------------
 @bot.message_handler(commands=['start'])
 def start(message):
-    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add("Packages / Plan List 🛍️")
-    bot.send_message(message.chat.id, "Welcome to SING IS LIVE X Bot", reply_markup=markup)
+    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    markup.add(
+        "Shop Now 🛒", 
+        "My Profile 👤",
+        "Wallet 💰", 
+        "Support 🆘",
+        "My Orders 📦", 
+        "Refer & Earn 🎁",
+        "Packages / Plan List 🛍️"
+    )
+    bot.send_message(message.chat.id, "Welcome to SING IS LIVE X Bot! Choose an option below:", reply_markup=markup)
 
-# Plan list
+# ---------------------------
+# Individual Menu Handlers
+# ---------------------------
+@bot.message_handler(func=lambda message: message.text == "Shop Now 🛒")
+def shop_now(message):
+    bot.send_message(message.chat.id, "Available Plans:\n1. 249 Plan\n2. 499 Plan\n3. 999 Plan")
+
+@bot.message_handler(func=lambda message: message.text == "My Profile 👤")
+def profile(message):
+    bot.send_message(message.chat.id, f"Your profile:\nName: User\nChat ID: {message.chat.id}")
+
+@bot.message_handler(func=lambda message: message.text == "Wallet 💰")
+def wallet(message):
+    bot.send_message(message.chat.id, "Wallet Balance: ₹0.00")
+
+@bot.message_handler(func=lambda message: message.text == "Support 🆘")
+def support(message):
+    bot.send_message(message.chat.id, "Contact support: support@example.com")
+
+@bot.message_handler(func=lambda message: message.text == "My Orders 📦")
+def my_orders(message):
+    bot.send_message(message.chat.id, "You have 0 orders")
+
+@bot.message_handler(func=lambda message: message.text == "Refer & Earn 🎁")
+def refer(message):
+    bot.send_message(message.chat.id, "Share this link to earn rewards:\nhttps://t.me/SINGISLIVEXBot?start=ref123")
+
+# ---------------------------
+# Plan Selection Workflow
+# ---------------------------
 @bot.message_handler(func=lambda message: message.text == "Packages / Plan List 🛍️")
 def plans(message):
     markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -68,18 +108,17 @@ def plans(message):
     markup.add("999 Plan")
     bot.send_message(message.chat.id, "Select Your Plan:", reply_markup=markup)
 
-# Plan selection
 @bot.message_handler(func=lambda message: message.text in ["249 Plan","499 Plan","999 Plan"])
 def ask_uid(message):
     user_plan[message.chat.id] = message.text
     bot.send_message(message.chat.id, "ENTER YOUR GUILD UID:")
 
-# UID input → show Pay Now link
 @bot.message_handler(func=lambda message: message.chat.id in user_plan)
 def get_uid(message):
     plan = user_plan[message.chat.id]
-
     markup = telebot.types.InlineKeyboardMarkup()
+    
+    # Plan → Payment link
     if plan == "249 Plan":
         link = "https://rzp.io/rzp/DKa3CHU"
     elif plan == "499 Plan":
@@ -141,7 +180,7 @@ Status: Paid
     return "OK"
 
 # ---------------------------
-# Run Flask app
+# Run Flask App
 # ---------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
